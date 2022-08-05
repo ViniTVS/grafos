@@ -4,24 +4,23 @@
 
 //------------------------------------------------------------------------------
 grafo le_grafo(void) {
-
-  return agread(stdin, NULL); 
+  grafo g = agread(stdin, NULL);
+  if(!g){
+    fprintf(stderr, "%s", "Erro ao ler grafo. Grafo não alocado!\n");
+    exit(1);
+  }
+  return g; 
 }
 //------------------------------------------------------------------------------
 int destroi_grafo(grafo g) {
   if(!g){
-    fprintf(stderr, "%s", "Erro ao destruir grafo. Grafo não alocado!\n");
-    return -1;
+    return 1;
   }
   free(g);
-  return 1;
+  return 0;
 }
 //------------------------------------------------------------------------------
 grafo escreve_grafo(grafo g) {
-  if(!g){
-    fprintf(stderr, "%s", "Erro ao escrever grafo. Grafo não alocado!\n");
-    return NULL;
-  }
   if(agwrite(g, stdout)){
     fprintf(stderr, "%s", "Erro ao escrever grafo.\n");
   }
@@ -30,21 +29,17 @@ grafo escreve_grafo(grafo g) {
 
 // -----------------------------------------------------------------------------
 int n_vertices(grafo g) {
-  if (g)
-    return agnnodes(g);
-  return 0;
+  return agnnodes(g);
 }
 
 // -----------------------------------------------------------------------------
 int n_arestas(grafo g) {
-  if (g)
-    return agnedges(g);
-  return 0;
+  return agnedges(g);
 }
 
 // -----------------------------------------------------------------------------
 int grau(vertice v, grafo g) {
-  if(v && g)
+  if(v)
     return agdegree(g, v, TRUE, TRUE);
 
   return -1;
@@ -52,9 +47,6 @@ int grau(vertice v, grafo g) {
 
 // -----------------------------------------------------------------------------
 int grau_maximo(grafo g)  {
-  if(!g)
-    return -1;
-
   int maior_grau = 0;
   vertice v;
   // percorre todos os vértices
@@ -69,9 +61,6 @@ int grau_maximo(grafo g)  {
 
 // -----------------------------------------------------------------------------
 int grau_minimo(grafo g)  {
-  if(!g)
-    return -1;
-  
   // considera o grau do primeiro vertice como o menor
   vertice v = agfstnode(g);
   if(!v) // não existe vértice no grafo, então retorna 0
@@ -90,9 +79,6 @@ int grau_minimo(grafo g)  {
 
 // -----------------------------------------------------------------------------
 float grau_medio(grafo g) {
-  if(!g)
-    return -1;
-
   int n_vertice, soma_graus = 0;
   // a soma dos graus de todos os vértices = 2|E(G)|
   for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)){
@@ -100,15 +86,12 @@ float grau_medio(grafo g) {
     soma_graus += grau(v, g);
   }
 
-  return ((float)soma_graus/ (float)n_vertice);
+  return ((float)soma_graus / (float)n_vertice);
 }
 
 // -----------------------------------------------------------------------------
 int regular(grafo g) {
   // regular = todos os vértices de mesmo grau
-  if (!g)
-    return -1;
-
   vertice v = agfstnode(g);
   if (!v) // grafo não tem vértice
     return -1;
@@ -125,8 +108,6 @@ int regular(grafo g) {
 
 // -----------------------------------------------------------------------------
 int completo(grafo g) {
-  if(!g)
-    return 0;
   int n = n_vertices(g);
   int m = n_arestas(g);
   // como só temos grafos direcionados, |A(G)| = n(n-1)/2 em grafos completos
