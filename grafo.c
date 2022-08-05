@@ -44,20 +44,48 @@ int n_arestas(grafo g) {
 
 // -----------------------------------------------------------------------------
 int grau(vertice v, grafo g) {
-  
-  return 0;
+  if(v && g)
+    return agdegree(g, v, TRUE, TRUE);
+
+  return -1;
 }
 
 // -----------------------------------------------------------------------------
 int grau_maximo(grafo g)  {
-  
-  return 0;
+  if(!g)
+    return -1;
+
+  int maior_grau = 0;
+  vertice v;
+  // percorre todos os vértices
+  for (v = agfstnode(g); v; v = agnxtnode(g, v)){
+    if (maior_grau < grau(v, g)){
+      maior_grau = grau(v, g);
+    }
+  }
+
+  return maior_grau;
 }
 
 // -----------------------------------------------------------------------------
 int grau_minimo(grafo g)  {
+  if(!g)
+    return -1;
   
-  return 0;
+  // considera o grau do primeiro vertice como o menor
+  vertice v = agfstnode(g);
+  if(!v) // não existe vértice no grafo, então retorna 0
+    return 0;
+
+  int menor_grau = grau(v, g);
+  // percorre todos os demais vértices
+  for (; v; v = agnxtnode(g, v)){
+    if (menor_grau > grau(v, g)){
+      menor_grau = grau(v, g);
+    }
+  }
+
+  return menor_grau;
 }
 
 // -----------------------------------------------------------------------------
