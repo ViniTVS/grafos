@@ -1,0 +1,4 @@
+// The graph name and the semicolons are optional
+graph "Grafo trivial" {
+    a ;
+}

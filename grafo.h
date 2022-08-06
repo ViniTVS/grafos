@@ -53,7 +53,7 @@ int grau_minimo(grafo g);
 // -----------------------------------------------------------------------------
 // devolve o grau médio de g
 
-float grau_medio(grafo g);
+int grau_medio(grafo g);
 
 //------------------------------------------------------------------------------
 // devolve 1 se g é regular, ou 0 caso contrário

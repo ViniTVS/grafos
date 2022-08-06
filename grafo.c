@@ -2,13 +2,18 @@
 #include <stdlib.h>
 #include "grafo.h"
 
+// Struct auxiliar para verificar se o grafo é conexo
+typedef struct {
+  int visitado; // 0 = n visitado, 1 = visitando vizinhos, 2 = visitei todos os vizinhos
+  vertice v; 
+  vertice pai;
+} visita_v;
 
 // obtém o vértice vizinho de u no grafo g a partir do vértice v
 // Ex:
 // for (vertice vizinho = obtem_vizinho(g, u, NULL); vizinho; vizinho = obtem_vizinho(g, u, vizinho)){
   // faz coisas
 // }
-
 vertice obtem_vizinho(grafo g, vertice u, vertice v){
   // vértice auxiliar p/ verificar se é vizinho
   vertice aux;
@@ -28,6 +33,43 @@ vertice obtem_vizinho(grafo g, vertice u, vertice v){
   }
   // ou não ter mais viziho
   return NULL;
+}
+
+// função auxiliar para saber se o vértice foi visitado
+int foi_visitado(visita_v *lista, vertice v){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v)
+      return lista[i].visitado;
+  }
+
+  return 0;
+}
+
+void alt_visitado(visita_v *lista, vertice v, int status){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v){
+      lista[i].visitado = status;
+      return;
+    }
+  }
+}
+
+vertice get_pai(visita_v *lista, vertice v){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v){
+      return lista[i].pai;
+    }
+  }
+  return v;
+}
+
+void set_pai(visita_v *lista, vertice v, vertice pai){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v){
+      lista[i].pai = pai;
+      return;
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -106,7 +148,7 @@ int grau_minimo(grafo g)  {
 }
 
 // -----------------------------------------------------------------------------
-float grau_medio(grafo g) {
+int grau_medio(grafo g) {
   int n_vertice, soma_graus = 0;
   // a soma dos graus de todos os vértices = 2|E(G)|
   for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)){
@@ -114,7 +156,7 @@ float grau_medio(grafo g) {
     soma_graus += grau(v, g);
   }
 
-  return ((float)soma_graus / (float)n_vertice);
+  return ( soma_graus / n_vertice);
 }
 
 // -----------------------------------------------------------------------------
@@ -146,19 +188,52 @@ int completo(grafo g) {
 // -----------------------------------------------------------------------------
 int conexo(grafo g) {
   vertice u,v;
-  int saida;
-  Agedge_t *e;
-  // v será um vértice fixo. Se existir caminho dele para todos os demais, temos
-  // um grafo conexo
-  v = agfstnode(g);
-  if (!v)
-    return 0;
-  for (e = agfstout(g,v); e; e = agnxtout(g,e)){
-
+  int n_v = n_vertices(g);
+  int i = 0;
+  // aloca em memória o array contendo as visitas 
+  visita_v *lista_visitas = calloc(  n_v, sizeof(visita_v));
+  for (v = agfstnode(g); v; v = agnxtnode(g, v), i++){
+    lista_visitas[i].visitado = 0;
+    lista_visitas[i].v = v;
   }
-  // cnt++;
-  // agnxtnode();
+
+  // u será um vértice "fixo". Se existir caminho dele para todos os demais, temos
+  // um grafo conexo
+  u = agfstnode(g);
+  if (!u)
+    return 0;
+  // estou visitando os vértices de u
+  alt_visitado(lista_visitas, u, 1);
+  set_pai(lista_visitas, u, NULL);
+
+  while (u){
+    v = obtem_vizinho(g, u, NULL);
+    while (v){
+      // visito quem ainda não foi visitado
+      if(foi_visitado(lista_visitas, v) == 0){
+        set_pai(lista_visitas, v, u); // atualizo o pai
+        alt_visitado(lista_visitas, v, 1); // vou percorrer o novo vizinho
+        // altero u para v
+        u = v;
+        v = NULL;
+      }
+      // v recebe o prox. vizinho
+      v = obtem_vizinho(g, u, v);
+    }
+    alt_visitado(lista_visitas, u, 2); // visitei todos os vizinhos
+    u = get_pai(lista_visitas, u);
+  }
+
+  // verifica se todos são 2
+  for (i = 0; i < n_v; i++){
+    if(lista_visitas[i].visitado != 2){
+      free(lista_visitas);
+      return 0;
+    }
+  }
   
+  free(lista_visitas);
+  return 1;
 }
 
 // -----------------------------------------------------------------------------
