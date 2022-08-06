@@ -2,6 +2,34 @@
 #include <stdlib.h>
 #include "grafo.h"
 
+
+// obtém o vértice vizinho de u no grafo g a partir do vértice v
+// Ex:
+// for (vertice vizinho = obtem_vizinho(g, u, NULL); vizinho; vizinho = obtem_vizinho(g, u, vizinho)){
+  // faz coisas
+// }
+
+vertice obtem_vizinho(grafo g, vertice u, vertice v){
+  // vértice auxiliar p/ verificar se é vizinho
+  vertice aux;
+  // se v é NULL, v passa a ser o primeiro vértice
+  if (!v)
+    aux = agfstnode(g);
+  else if (v == aglstnode(g)) // se v é o último, então já verificamos todos
+    return NULL;
+  else
+    aux = agnxtnode(g, v);
+  // percorre os demais vértices até encontrar o prox. vizinho ...
+  while (aux) {
+    if(agedge(g, u, aux, NULL, 0)){
+      return aux;
+    }
+    aux = agnxtnode(g, aux);
+  }
+  // ou não ter mais viziho
+  return NULL;
+}
+
 //------------------------------------------------------------------------------
 grafo le_grafo(void) {
   grafo g = agread(stdin, NULL);
@@ -110,15 +138,27 @@ int regular(grafo g) {
 int completo(grafo g) {
   int n = n_vertices(g);
   int m = n_arestas(g);
-  // como só temos grafos direcionados, |A(G)| = n(n-1)/2 em grafos completos
+  // como só temos grafos não direcionados, |A(G)| = n(n-1)/2 em grafos completos
   //! também podemos verificar o grau 1 a 1 para ver se o grafo não foi "mal montado" 
   return (m == n*(n-1)/2);
 }
 
 // -----------------------------------------------------------------------------
 int conexo(grafo g) {
+  vertice u,v;
+  int saida;
+  Agedge_t *e;
+  // v será um vértice fixo. Se existir caminho dele para todos os demais, temos
+  // um grafo conexo
+  v = agfstnode(g);
+  if (!v)
+    return 0;
+  for (e = agfstout(g,v); e; e = agnxtout(g,e)){
+
+  }
+  // cnt++;
+  // agnxtnode();
   
-  return 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -132,7 +172,6 @@ int n_triangulos(grafo g) {
   
   return 0;
 }
-
 
 // -----------------------------------------------------------------------------
 int **matriz_adjacencia(grafo g) {
