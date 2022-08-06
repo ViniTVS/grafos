@@ -133,10 +133,36 @@ int n_triangulos(grafo g) {
   return 0;
 }
 
+
 // -----------------------------------------------------------------------------
 int **matriz_adjacencia(grafo g) {
-  
-  return NULL;
+  int vertices = n_vertices(g);
+
+  // Aloca memoria para a matriz
+  int **matriz = malloc(vertices * sizeof(int*));
+  for (int i=0; i<vertices; i++){
+    matriz[i] = calloc(vertices, sizeof(int));
+  }
+
+  vertice v1, v2;
+  int i, j;
+  i = 0;
+
+  // Percorre vertices 2 a 2
+  for (v1 = agfstnode(g); v1; v1 = agnxtnode(g,v1)){
+    j = 0; // reinicia indice 2
+    for (v2 = agfstnode(g); v2; v2 = agnxtnode(g,v2)){
+      if (agedge(g, v1, v2, NULL, 0)){ // 0 = flag para criar se nao existir
+        matriz[i][j] = 1;
+      }
+      // printf("%d  ", matriz[i][j]);
+      j++;
+    }
+    // printf("\n");
+    i++;
+  }
+
+  return matriz;
 }
 
 // -----------------------------------------------------------------------------
