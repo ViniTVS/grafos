@@ -1,0 +1,3 @@
+graph "Exemplo de grafo inválido" {
+    a -- a;
+}

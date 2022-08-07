@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include "grafo.h"
 
-// Struct auxiliar para verificar se o grafo é conexo
+// Struct auxiliar para verificar se o grafo é conexo/bipartido
 typedef struct {
-  int visitado; // 0 = não visitado, 1 = visitando vizinhos, 2 = visitei todos os vizinhos
-  int cor; // 0 = sem cor, 1 = roxo, 2 = azul
+  int visitado;   // 0 = não visitado, 1 = visitando vizinhos, 2 = visitei todos os vizinhos
+  int cor;        // 0 = sem cor, 1 = roxo, 2 = azul
   vertice v; 
   vertice pai;
 } s_auxiliar;
@@ -144,7 +144,7 @@ int grau(vertice v, grafo g) {
   if(v)
     return agdegree(g, v, TRUE, TRUE);
 
-  return -1;
+  return 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -182,8 +182,11 @@ int grau_minimo(grafo g)  {
 // -----------------------------------------------------------------------------
 int grau_medio(grafo g) {
   int n_vertice, soma_graus = 0;
+  vertice v = agfstnode(g);
+  if(!v)
+    return 0;
   // a soma dos graus de todos os vértices = 2|E(G)|
-  for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)){
+  for (; v; v = agnxtnode(g, v)){
     n_vertice++;
     soma_graus += grau(v, g);
   }
@@ -196,7 +199,7 @@ int regular(grafo g) {
   // regular = todos os vértices de mesmo grau
   vertice v = agfstnode(g);
   if (!v) // grafo não tem vértice
-    return -1;
+    return 0;
 
   int grau_v = grau(v, g);
   // percorre todos os demais vértices
@@ -212,6 +215,8 @@ int regular(grafo g) {
 int completo(grafo g) {
   int n = n_vertices(g);
   int m = n_arestas(g);
+  if (n == 0)
+    return 0;
   // como só temos grafos não direcionados, |A(G)| = n(n-1)/2 em grafos completos
   //! também podemos verificar o grau 1 a 1 para ver se o grafo não foi "mal montado" 
   return (m == n*(n-1)/2);
@@ -234,7 +239,7 @@ int conexo(grafo g) {
   u = agfstnode(g);
   if (!u)
     return 0;
-  // estou visitando os vértices de u
+  // estou visitando os vértices vizinhos de u
   set_visitado(lista_visitas, u, 1);
   set_pai(lista_visitas, u, NULL);
 
@@ -398,7 +403,7 @@ int n_triangulos(grafo g){
 
   // Calcula a soma da diagonal da matriz ao cubo
   int soma_diagonal = soma_diagonal_principal(resultado_cubo, tamanho);
-  return soma_diagonal / 6;
+  return(soma_diagonal / 6);
 }
 
 // -----------------------------------------------------------------------------

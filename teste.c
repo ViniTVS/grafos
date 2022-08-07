@@ -26,8 +26,7 @@ int main(void)
   printf("Maior grau de G: %d \n", n);
   n = grau_minimo(g);
   printf("Menor grau de G: %d \n", n);
-  float m = grau_medio(g);
-  printf("Grau médio de G: %f \n", m);
+  printf("Grau médio de G: %d \n", grau_medio(g));
   n = regular(g);
   printf("G é regular? %d \n", n);
   n = completo(g);
@@ -66,6 +65,7 @@ int main(void)
     printf("\n");
   }
 
+  escreve_grafo(g);
 
   // Libera alocacoes de memoria
   destroi_grafo(g);
