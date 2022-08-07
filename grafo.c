@@ -10,6 +10,16 @@ typedef struct {
   vertice pai;
 } s_auxiliar;
 
+// prototypes das funcoes que criamos
+vertice obtem_vizinho(grafo g, vertice u, vertice v);
+int get_visitado(s_auxiliar *lista, vertice v);
+void set_visitado(s_auxiliar *lista, vertice v, int status);
+int get_cor(s_auxiliar *lista, vertice v);
+void set_cor(s_auxiliar *lista, vertice v, int status);
+vertice get_pai(s_auxiliar *lista, vertice v);
+void set_pai(s_auxiliar *lista, vertice v, vertice pai);
+void print_auxiliar(s_auxiliar *lista, int tam);
+
 // obtém o vértice vizinho de u no grafo g a partir do vértice v
 // Ex:
 // for (vertice vizinho = obtem_vizinho(g, u, NULL); vizinho; vizinho = obtem_vizinho(g, u, vizinho)){
@@ -114,12 +124,12 @@ grafo le_grafo(void) {
   return g; 
 }
 //------------------------------------------------------------------------------
-int destroi_grafo(grafo g) {
-  if(!g){
-    return 1;
-  }
+void destroi_grafo(grafo g) {
+  // if(!g){
+  //   return 1;
+  // }
   free(g);
-  return 0;
+  // return 0;
 }
 //------------------------------------------------------------------------------
 grafo escreve_grafo(grafo g) {
