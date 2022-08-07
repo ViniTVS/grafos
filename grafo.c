@@ -291,8 +291,7 @@ int bipartido(grafo g) {
   // indica qual cor devo pintar o próximo vértice com base na cor atual
   int cor[3] = {0, 2, 1};
 
-  // semelhante ao conexo, vamos visitar somente os vértices vizinhos, já
-  // que um grafo bipartido também é obrigatoriamente conexo
+  // semelhante ao conexo, começo com o vértice de um componente
   u = agfstnode(g);
   set_visitado(lista_visitas, u, 1);
   set_cor(lista_visitas, u, 1);
@@ -300,6 +299,7 @@ int bipartido(grafo g) {
 
   while (u){
     v = obtem_vizinho(g, u, NULL);
+
     while (v){
       // visito quem ainda não foi visitado
       if(get_visitado(lista_visitas, v) == 0){
@@ -319,18 +319,27 @@ int bipartido(grafo g) {
       // v recebe o prox. vizinho
       v = obtem_vizinho(g, u, v);
     }
-    set_visitado(lista_visitas, u, 2); // visitei todos os vizinhos
-    u = get_pai(lista_visitas, u);
-  }
+    set_visitado(lista_visitas, u, 2); // visitei todos os vizinhos de u
 
-  // verifica se todos são 1 ou 2
-  for (i = 0; i < num_vertices; i++){
-    if(lista_visitas[i].cor == 0){
-      free(lista_visitas);
-      return 0;
+    // acabo este componente, preciso buscar um vertice de outro componente que não colori 
+    if (!get_pai(lista_visitas, u)){
+      // suponho que não acho outro componente
+      u = NULL;
+      for (i = 0; i < num_vertices; i++){
+        if(lista_visitas[i].cor == 0){
+          // acho outro componente e faço seu "setup"
+          u = lista_visitas[i].v;
+          set_visitado(lista_visitas, u, 1);
+          set_cor(lista_visitas, u, 1);
+          set_pai(lista_visitas, u, NULL);
+          break;
+        }
+      } 
+    } else {
+      u = get_pai(lista_visitas, u);
     }
   }
-  
+  // se cheguei a este ponto, pintei todos os vértices e não tive vizinhos de mesma cor
   free(lista_visitas);
   return 1;
 }
