@@ -188,7 +188,7 @@ int grau_medio(grafo g) {
     soma_graus += grau(v, g);
   }
 
-  return ( soma_graus / n_vertice);
+  return (soma_graus / n_vertice);
 }
 
 // -----------------------------------------------------------------------------
@@ -344,9 +344,61 @@ int bipartido(grafo g) {
   return 1;
 }
 
+
+int **multiplica_matriz(int **matriz, int **aux_matriz, int tamanho){
+  int aux;
+  int **resultado = malloc(tamanho * sizeof(int*));
+  for (int i = 0; i < tamanho; i++){
+    resultado[i] = calloc(tamanho, sizeof(int));
+  }
+
+  for (int i = 0; i < tamanho; i++){
+    for (int j = 0; j < tamanho; j++){
+      aux = 0; // reseta auxiliar
+      for (int k = 0; k < tamanho; k++){
+        aux += matriz[i][k] * aux_matriz[k][j]; // multiplica linha i por coluna j
+      }
+      resultado[i][j] = aux;
+    }
+  }
+  return resultado;
+}
+
+
+int soma_diagonal_principal(int **matriz, int tamanho){
+  int soma = 0;
+  for (int i = 0; i < tamanho; i++){
+    soma += matriz[i][i];
+  }
+  return soma;
+}
+
+
+void print_matriz(int **matriz, int tamanho){
+  for (int i = 0; i < tamanho; i++){
+    for (int j = 0; j < tamanho; j++)
+      printf("%d ", matriz[i][j]);
+    printf("\n");
+  }
+}
+
+
 // -----------------------------------------------------------------------------
-int n_triangulos(grafo g) {
-  return 0;
+int n_triangulos(grafo g){
+
+  // Obtem a matriz de adjacencia
+  int **matriz = matriz_adjacencia(g);
+  int tamanho = n_vertices(g);
+
+  // Eleva matriz ao cubo
+  int **resultado_quadrado = multiplica_matriz(matriz, matriz, tamanho); // matriz ao quadrado
+  int **resultado_cubo = multiplica_matriz(resultado_quadrado, matriz, tamanho); // matriz ao cubo
+
+  // print_matriz(resultado_cubo, tamanho);
+
+  // Calcula a soma da diagonal da matriz ao cubo
+  int soma_diagonal = soma_diagonal_principal(resultado_cubo, tamanho);
+  return soma_diagonal / 6;
 }
 
 // -----------------------------------------------------------------------------
@@ -370,10 +422,8 @@ int **matriz_adjacencia(grafo g) {
       if (agedge(g, v1, v2, NULL, 0)){ // 0 = flag para criar se nao existir
         matriz[i][j] = 1;
       }
-      // printf("%d  ", matriz[i][j]);
       j++;
     }
-    // printf("\n");
     i++;
   }
 
@@ -421,6 +471,6 @@ grafo complemento(grafo g) {
 
   // matriz_adjacencia(g);
   // matriz_adjacencia(g_barra);
-  return NULL;
+  return g_barra;
 }
 
