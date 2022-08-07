@@ -8,6 +8,8 @@ graph "Exemplo de grafo inválido" {
 } 
 Casos de grafos como o de acima não foram validados.
 
+Caso a entrada contendo o arquivo .dot esteja mal formatada, o programa é finalizado.
+
 Segue abaixo a lógica usada para alguns dos algoritmos feitos:
 
 int grau_medio(grafo g);
