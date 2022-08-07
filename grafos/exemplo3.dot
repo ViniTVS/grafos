@@ -1,0 +1,6 @@
+// The graph name and the semicolons are optional
+graph "Grafo desconexo bipartido" {
+    a -- b -- c;
+    b -- d;
+    e -- f -- g;
+}

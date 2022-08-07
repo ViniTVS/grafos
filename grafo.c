@@ -2,13 +2,19 @@
 #include <stdlib.h>
 #include "grafo.h"
 
+// Struct auxiliar para verificar se o grafo é conexo
+typedef struct {
+  int visitado; // 0 = não visitado, 1 = visitando vizinhos, 2 = visitei todos os vizinhos
+  int cor; // 0 = sem cor, 1 = roxo, 2 = azul
+  vertice v; 
+  vertice pai;
+} s_auxiliar;
 
 // obtém o vértice vizinho de u no grafo g a partir do vértice v
 // Ex:
 // for (vertice vizinho = obtem_vizinho(g, u, NULL); vizinho; vizinho = obtem_vizinho(g, u, vizinho)){
   // faz coisas
 // }
-
 vertice obtem_vizinho(grafo g, vertice u, vertice v){
   // vértice auxiliar p/ verificar se é vizinho
   vertice aux;
@@ -28,6 +34,74 @@ vertice obtem_vizinho(grafo g, vertice u, vertice v){
   }
   // ou não ter mais viziho
   return NULL;
+}
+
+// função auxiliar para saber se o vértice foi visitado
+int get_visitado(s_auxiliar *lista, vertice v){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v)
+      return lista[i].visitado;
+  }
+
+  return 0;
+}
+
+void set_visitado(s_auxiliar *lista, vertice v, int status){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v){
+      lista[i].visitado = status;
+      return;
+    }
+  }
+}
+
+// função auxiliar para saber se o vértice foi visitado
+int get_cor(s_auxiliar *lista, vertice v){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v)
+      return lista[i].cor;
+  }
+
+  return 0;
+}
+
+void set_cor(s_auxiliar *lista, vertice v, int status){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v){
+      lista[i].cor = status;
+      return;
+    }
+  }
+}
+
+vertice get_pai(s_auxiliar *lista, vertice v){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v){
+      return lista[i].pai;
+    }
+  }
+  return v;
+}
+
+void set_pai(s_auxiliar *lista, vertice v, vertice pai){
+  for(int i = 0; ; i++){
+    if (lista[i].v == v){
+      lista[i].pai = pai;
+      return;
+    }
+  }
+}
+
+void print_auxiliar(s_auxiliar *lista, int tam){
+  printf("Auxiliar: \n\t");
+  printf("v pai vis cor\n\t");
+  for(int i = 0; i < tam; i++){
+    if (lista[i].pai)
+      printf("%s %s %d %d\n\t", agnameof(lista[i].v), agnameof(lista[i].pai), lista[i].visitado, lista[i].cor);
+    else
+      printf("%s NULL %d %d\n\t", agnameof(lista[i].v), lista[i].visitado, lista[i].cor);
+  }
+  printf("\n");
 }
 
 //------------------------------------------------------------------------------
@@ -106,7 +180,7 @@ int grau_minimo(grafo g)  {
 }
 
 // -----------------------------------------------------------------------------
-float grau_medio(grafo g) {
+int grau_medio(grafo g) {
   int n_vertice, soma_graus = 0;
   // a soma dos graus de todos os vértices = 2|E(G)|
   for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)){
@@ -114,7 +188,7 @@ float grau_medio(grafo g) {
     soma_graus += grau(v, g);
   }
 
-  return ((float)soma_graus / (float)n_vertice);
+  return ( soma_graus / n_vertice);
 }
 
 // -----------------------------------------------------------------------------
@@ -146,30 +220,132 @@ int completo(grafo g) {
 // -----------------------------------------------------------------------------
 int conexo(grafo g) {
   vertice u,v;
-  int saida;
-  Agedge_t *e;
-  // v será um vértice fixo. Se existir caminho dele para todos os demais, temos
-  // um grafo conexo
-  v = agfstnode(g);
-  if (!v)
-    return 0;
-  for (e = agfstout(g,v); e; e = agnxtout(g,e)){
-
+  int num_vertices = n_vertices(g);
+  int i = 0;
+  // aloca em memória o array contendo as visitas 
+  s_auxiliar *lista_visitas = calloc( num_vertices, sizeof(s_auxiliar));
+  for (v = agfstnode(g); v; v = agnxtnode(g, v), i++){
+    lista_visitas[i].visitado = 0;
+    lista_visitas[i].v = v;
   }
-  // cnt++;
-  // agnxtnode();
+
+  // u será um vértice "fixo". Se existir caminho dele para todos os demais, temos
+  // um grafo conexo
+  u = agfstnode(g);
+  if (!u)
+    return 0;
+  // estou visitando os vértices de u
+  set_visitado(lista_visitas, u, 1);
+  set_pai(lista_visitas, u, NULL);
+
+  while (u){
+    v = obtem_vizinho(g, u, NULL);
+    while (v){
+      // visito quem ainda não foi visitado
+      if(get_visitado(lista_visitas, v) == 0){
+        set_pai(lista_visitas, v, u); // atualizo o pai
+        set_visitado(lista_visitas, v, 1); // vou percorrer o novo vizinho
+        // altero u para v
+        u = v;
+        v = NULL;
+      }
+      // v recebe o prox. vizinho
+      v = obtem_vizinho(g, u, v);
+    }
+    set_visitado(lista_visitas, u, 2); // visitei todos os vizinhos
+    u = get_pai(lista_visitas, u);
+  }
+
+  // verifica se todos são 2
+  for (i = 0; i < num_vertices; i++){
+    if(lista_visitas[i].visitado != 2){
+      free(lista_visitas);
+      return 0;
+    }
+  }
   
+  free(lista_visitas);
+  return 1;
 }
 
 // -----------------------------------------------------------------------------
 int bipartido(grafo g) {
-  
-  return 0;
+  // se g é bipartido, podemos pintar seu vértices com 2 cores. Então:
+  // se u é de uma cor, todos os seus vizinhos devem ser de outra cor
+  int num_vertices = n_vertices(g);
+  // grafos vazio e trivial nunca serão bipartidos
+  if (num_vertices < 2)
+    return 0;
+  vertice u, v;
+  int i = 0;
+  // aloca em memória o array contendo as cores
+  // O visitado da struct passa a indicar as cores dos vértices  
+  // 0 = não pintado 
+  // 1 = pintado de roxo
+  // 2 = pintado de azul
+  s_auxiliar *lista_visitas = calloc( num_vertices, sizeof(s_auxiliar));
+  for (v = agfstnode(g); v; v = agnxtnode(g, v), i++){
+    lista_visitas[i].visitado = 0;
+    lista_visitas[i].v = v;
+  }
+  // indica qual cor devo pintar o próximo vértice com base na cor atual
+  int cor[3] = {0, 2, 1};
+
+  // semelhante ao conexo, começo com o vértice de um componente
+  u = agfstnode(g);
+  set_visitado(lista_visitas, u, 1);
+  set_cor(lista_visitas, u, 1);
+  set_pai(lista_visitas, u, NULL);
+
+  while (u){
+    v = obtem_vizinho(g, u, NULL);
+
+    while (v){
+      // visito quem ainda não foi visitado
+      if(get_visitado(lista_visitas, v) == 0){
+        set_pai(lista_visitas, v, u); // atualizo o pai
+        set_visitado(lista_visitas, v, 1); // vou percorrer o novo vizinho
+        set_cor(lista_visitas, v, cor[get_cor(lista_visitas, u)]); // pinto com a outra cor
+        // altero u para v
+        u = v;
+        v = NULL;
+      } else {
+        // se o vizinho tem a mesma cor do atual, este grafo não é bipartido
+        if(get_cor(lista_visitas, v) == get_cor(lista_visitas, u)){
+          free(lista_visitas);          
+          return 0;
+        }
+      }
+      // v recebe o prox. vizinho
+      v = obtem_vizinho(g, u, v);
+    }
+    set_visitado(lista_visitas, u, 2); // visitei todos os vizinhos de u
+
+    // acabo este componente, preciso buscar um vertice de outro componente que não colori 
+    if (!get_pai(lista_visitas, u)){
+      // suponho que não acho outro componente
+      u = NULL;
+      for (i = 0; i < num_vertices; i++){
+        if(lista_visitas[i].cor == 0){
+          // acho outro componente e faço seu "setup"
+          u = lista_visitas[i].v;
+          set_visitado(lista_visitas, u, 1);
+          set_cor(lista_visitas, u, 1);
+          set_pai(lista_visitas, u, NULL);
+          break;
+        }
+      } 
+    } else {
+      u = get_pai(lista_visitas, u);
+    }
+  }
+  // se cheguei a este ponto, pintei todos os vértices e não tive vizinhos de mesma cor
+  free(lista_visitas);
+  return 1;
 }
 
 // -----------------------------------------------------------------------------
 int n_triangulos(grafo g) {
-  
   return 0;
 }
 
@@ -194,10 +370,10 @@ int **matriz_adjacencia(grafo g) {
       if (agedge(g, v1, v2, NULL, 0)){ // 0 = flag para criar se nao existir
         matriz[i][j] = 1;
       }
-      printf("%d  ", matriz[i][j]);
+      // printf("%d  ", matriz[i][j]);
       j++;
     }
-    printf("\n");
+    // printf("\n");
     i++;
   }
 
@@ -243,12 +419,8 @@ grafo complemento(grafo g) {
     i++;
   }
 
-  printf("\n\n");
-  matriz_adjacencia(g);
-  printf("\n\n");
-  matriz_adjacencia(g_barra);
-  printf("\n\n");
-
+  // matriz_adjacencia(g);
+  // matriz_adjacencia(g_barra);
   return NULL;
 }
 

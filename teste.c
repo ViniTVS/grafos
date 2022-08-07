@@ -5,7 +5,7 @@
 
 int main(void)
 {
-
+  vertice v, vizinho;
   grafo g = le_grafo();
 
   // escreve_grafo(g);
@@ -33,6 +33,15 @@ int main(void)
   printf("G é completo? %d \n", n);
 
   matriz_adjacencia(g);
+
+  // for (v = agfstnode(g); v; v = agnxtnode(g, v)){
+  //   printf("Vizinhos de %s: \n\t", agnameof(v));
+  //   for ( vizinho = obtem_vizinho(g, v, NULL); vizinho; vizinho = obtem_vizinho(g, v, vizinho)){
+  //     printf("%s\n\t", agnameof(vizinho));
+  //   }
+  //   printf("\n");
+  // }
+  printf("É bipartido? %d \n", bipartido(g));
 
   complemento(g);
 

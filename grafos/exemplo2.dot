@@ -1,5 +1,5 @@
 // Grafo completo de 4 vértices
-graph quatroCompleto {
+graph "4-completo" {
     a -- b -- c -- d -- a -- c;
     b -- d;
 }
