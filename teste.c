@@ -32,8 +32,9 @@ int main(void)
   n = completo(g);
   printf("G é completo? %d \n", n);
 
-
   matriz_adjacencia(g);
+
+  complemento(g);
 
   return 0;
 }

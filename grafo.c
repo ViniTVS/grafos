@@ -194,10 +194,10 @@ int **matriz_adjacencia(grafo g) {
       if (agedge(g, v1, v2, NULL, 0)){ // 0 = flag para criar se nao existir
         matriz[i][j] = 1;
       }
-      // printf("%d  ", matriz[i][j]);
+      printf("%d  ", matriz[i][j]);
       j++;
     }
-    // printf("\n");
+    printf("\n");
     i++;
   }
 
@@ -206,7 +206,49 @@ int **matriz_adjacencia(grafo g) {
 
 // -----------------------------------------------------------------------------
 grafo complemento(grafo g) {
-  
+  int vertices = n_vertices(g);
+
+  // Novo grafo com mesmo tipo de g
+  grafo g_barra = agopen("g_barra", g->desc, NULL); // complemento
+
+  vertice v1, v2, v1_barra, v2_barra;;
+  int i, j;
+  i = 0;
+
+  // Copia os vertices
+  for (v1 = agfstnode(g); v1; v1 = agnxtnode(g, v1)){
+    agnode(g_barra, agnameof(v1), TRUE);
+  }
+
+  // Cria arestas
+  // Percorre vertices 2 a 2
+  for (v1 = agfstnode(g); v1; v1 = agnxtnode(g, v1)){
+    j = 0; // reinicia indice 2
+    for (v2 = agfstnode(g); v2; v2 = agnxtnode(g, v2)){
+
+      // se nao existe aresta no original
+      // FALSE = flag para nao criar se nao existir
+      if (!agedge(g, v1, v2, NULL, FALSE)){
+        if (agnameof(v1) != agnameof(v2)){
+          // encontra os vertices correspondentes em g_barra
+          v1_barra = agnode(g_barra, agnameof(v1), FALSE);
+          v2_barra = agnode(g_barra, agnameof(v2), FALSE);
+
+          // adiciona aresta
+          agedge(g_barra, v1_barra, v2_barra, NULL, 1);
+        }
+      }
+      j++;
+    }
+    i++;
+  }
+
+  printf("\n\n");
+  matriz_adjacencia(g);
+  printf("\n\n");
+  matriz_adjacencia(g_barra);
+  printf("\n\n");
+
   return NULL;
 }
 
