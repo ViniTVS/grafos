@@ -8,7 +8,11 @@ typedef struct {
   int cor;        // 0 = sem cor, 1 = roxo, 2 = azul
   vertice v; 
   vertice pai;
+  int pre;
+  int pos;
 } s_auxiliar;
+
+typedef Agedge_t *arco;
 
 // prototypes das funcoes que criamos
 vertice obtem_vizinho(grafo g, vertice u, vertice v);
@@ -483,5 +487,38 @@ grafo complemento(grafo g) {
   // matriz_adjacencia(g);
   // matriz_adjacencia(g_barra);
   return g_barra;
+}
+// cria o grafo transposto como um subgrafo de g
+grafo transposto(grafo g){
+  grafo g_trans = agopen("G transposto", Agdirected, NULL);
+  if (!g_trans)
+    return NULL;
+  
+  vertice v, vizinho_saida;
+  arco a;
+  // Adiciona cada vértice de g no transposto 
+  for (v = agfstnode(g); v; v = agnxtnode(g,v)) {
+    agnode(g_trans, agnameof(v), TRUE);
+  }
+  // Adiciona cada arco de g no transposto 
+  for (v = agfstnode(g); v; v = agnxtnode(g,v)) {
+    for (a = agfstout(g,v); a; a = agnxtout(g,a)) {
+      vizinho_saida = aghead(a);
+      // adiciona arco no transposto
+      agedge(g_trans, agnode(g_trans, agnameof(vizinho_saida), FALSE), agnode(g_trans, agnameof(v), FALSE), NULL, TRUE);
+    }
+  }
+  return g_trans;
+}
+
+grafo decompoe(grafo g){
+  // se não for direcionado, retorna g
+  if (!agisdirected(g))
+    return g;
+
+  grafo g_trans = transposto(g);
+  agclose(g_trans); // não precisamos mais do transposto
+
+  return g;
 }
 
