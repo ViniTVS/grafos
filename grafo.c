@@ -10,6 +10,7 @@ typedef struct {
   vertice pai;
   int pre;
   int pos;
+  int componente;
 } s_auxiliar;
 
 typedef Agedge_t *arco;
@@ -488,6 +489,8 @@ grafo complemento(grafo g) {
   // matriz_adjacencia(g_barra);
   return g_barra;
 }
+
+// -----------------------------------------------------------------------------
 // cria o grafo transposto como um subgrafo de g
 grafo transposto(grafo g){
   grafo g_trans = agopen("G transposto", Agdirected, NULL);
@@ -511,14 +514,101 @@ grafo transposto(grafo g){
   return g_trans;
 }
 
+
+// Inicializa struct auxiliar e seta valores iniciais de estado e componente
+s_auxiliar *init_s_aux_componentes(grafo g){
+  vertice v;
+  int num_vertices = n_vertices(g);
+  int i = 0;
+
+  // aloca em memória o array contendo as visitas 
+  s_auxiliar *lista_visitas = calloc(num_vertices, sizeof(s_auxiliar));
+  for (v = agfstnode(g); v; v = agnxtnode(g, v), i++){
+    lista_visitas[i].cor = 0;  // estado
+    lista_visitas[i].componente = 0;
+  }
+
+  return lista_visitas;
+}
+
+
+// Retorna pointer para o vertice dentro da estrutura
+s_auxiliar *busca_vertice(s_auxiliar *grafo_auxiliar, int n, vertice v){
+  for (int i = 0; i < n; i++){
+    if (grafo_auxiliar[i].v == v)
+      return &(grafo_auxiliar[i]);
+  }
+  return NULL;
+}
+
+
+grafo decompoe_vertice(grafo g, s_auxiliar *grafo_auxiliar, s_auxiliar *r, int *c){
+  s_auxiliar *vizinho, *u;
+  Agedge_t *e;
+
+  int num_vertices = n_vertices(g);
+  r->cor = 1;
+  u = r;
+
+  // Vizinhos de saida
+  for (e = agfstout(g, u->v); e; e = agnxtout(g, e)){
+    vizinho = busca_vertice(grafo_auxiliar, num_vertices, e->node);
+    if (vizinho->cor == 0){
+      *c += 1;
+      decompoe_vertice(g, grafo_auxiliar, vizinho, c);
+    }
+  }
+
+  r->componente = *c;
+  r->cor = 2;
+}
+
+
+// Percorre com DFS o grafo auxiliar transposto e retorna o reverso da pos ordem
+s_auxiliar *pos_ordem_dfs_reverso(s_auxiliar *grafo_auxiliar_trans){
+  // DFS
+
+  // Reverso
+
+  return NULL;
+}
+
+
+// -----------------------------------------------------------------------------
 grafo decompoe(grafo g){
   // se não for direcionado, retorna g
   if (!agisdirected(g))
     return g;
 
-  grafo g_trans = transposto(g);
-  agclose(g_trans); // não precisamos mais do transposto
+  int num_vertices = n_vertices(g);
 
+
+  s_auxiliar *grafo_auxiliar = init_s_aux_componentes(g);
+
+  // REVERSO DA POS ORDEM DE UMA DFS EM G^T
+  // acrescenta à lista de subgrafos de g cada um de seus componentes fortes
+  // vide agsubg(), agfstsubg(), agnxtsubg()
+  grafo g_trans = transposto(g);
+
+  // estrutura auxiliar de grafo que contem estado e componente
+  // basicamente, uma lista de vertices e seus atributos
+  s_auxiliar *grafo_auxiliar_trans = init_s_aux_componentes(g_trans);
+  // reverso da pos ordem resultante de uma busca em profundidade no grafo transposto
+  s_auxiliar *pos_ordem_reverso = pos_ordem_dfs_reverso(grafo_auxiliar_trans);
+
+
+  // Inicializa c
+  int c = 0;  // componentes
+
+  s_auxiliar v;
+  for (int i = 0; i < num_vertices; i++){
+    v = pos_ordem_reverso[i];
+    if (v.cor == 0){
+      c++;
+      decompoe_vertice(g, grafo_auxiliar, &v, &c);
+    }
+  }
+
+  agclose(g_trans); // não precisamos mais do transposto
   return g;
 }
-
