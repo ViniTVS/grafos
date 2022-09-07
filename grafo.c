@@ -650,8 +650,40 @@ grafo decompoe(grafo g){
       decompoe_vertice(g, &array_g[i], array_g);
     }
   }
-  print_auxiliar(array_g, n);
-
+  // Agora adiciona os subgrafos em g
+  vertice v, vizinho_saida;
+  s_auxiliar *s_vizinho;
+  arco a;
+  grafo subgrafo;
+  for(int num_c = 1; num_c <= c; num_c++){
+    // cria subgrafo
+    subgrafo = agsubg(g, NULL, TRUE);
+    // busca vértices que pertencem ao subgrafo
+    for(int j = 0; j < n; j++){
+      // se o vértice pertence ao componente
+      if(array_g[j].componente == num_c){
+        // adiciona o vértice ao subgrafo (caso não esteja)
+        v = array_g[j].v;
+        if (agsubnode(subgrafo, v, FALSE) == NULL){
+          agsubnode(subgrafo, v, TRUE);
+        }
+        // percorre os vizinhos de v
+        for (a = agfstout(g,v); a; a = agnxtout(g,a)) {
+          // obtém vizinho e sua estrutura de dados
+          vizinho_saida = aghead(a);
+          s_vizinho = busca_vertice(array_g, n, vizinho_saida);
+          // se este vizinho pertence ao mesmo componente
+          if(s_vizinho -> componente == num_c){
+            // adiciona vizinho
+            if (agsubnode(subgrafo, vizinho_saida, FALSE) == NULL){
+              agsubnode(subgrafo, vizinho_saida, TRUE);
+            }
+            agsubedge(subgrafo, a, TRUE);
+          }   
+        }
+      }
+    }
+  }
   // libera espaços de memória utilizados
   destroi_grafo(g_trans); 
   free(pos_ordem_g_trans);
