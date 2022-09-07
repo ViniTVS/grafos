@@ -14,7 +14,9 @@ typedef struct {
 } s_auxiliar;
 
 typedef Agedge_t *arco;
-
+// globais de auxilio p/ pos_ordem 
+int t;
+int c;
 // prototypes das funcoes que criamos
 vertice obtem_vizinho(grafo g, vertice u, vertice v);
 int get_visitado(s_auxiliar *lista, vertice v);
@@ -109,12 +111,12 @@ void set_pai(s_auxiliar *lista, vertice v, vertice pai){
 
 void print_auxiliar(s_auxiliar *lista, int tam){
   printf("Auxiliar: \n\t");
-  printf("v pai vis cor\n\t");
+  printf("v\tpai\tvis\tcor\tpre\tpos\tcomponente\n\t");
   for(int i = 0; i < tam; i++){
     if (lista[i].pai)
-      printf("%s %s %d %d\n\t", agnameof(lista[i].v), agnameof(lista[i].pai), lista[i].visitado, lista[i].cor);
+      printf("%s\t%s\t%d\t%d\t%d\t%d\t%d\n\t", agnameof(lista[i].v), agnameof(lista[i].pai), lista[i].visitado, lista[i].cor, lista[i].pre, lista[i].pos, lista[i].componente);
     else
-      printf("%s NULL %d %d\n\t", agnameof(lista[i].v), lista[i].visitado, lista[i].cor);
+      printf("%s\tNULL\t%d\t%d\t%d\t%d\t%d\n\t", agnameof(lista[i].v), lista[i].visitado, lista[i].cor, lista[i].pre, lista[i].pos, lista[i].componente);
   }
   printf("\n");
 }
@@ -514,25 +516,7 @@ grafo transposto(grafo g){
   return g_trans;
 }
 
-
-// Inicializa struct auxiliar e seta valores iniciais de estado e componente
-s_auxiliar *init_s_aux_componentes(grafo g){
-  vertice v;
-  int num_vertices = n_vertices(g);
-  int i = 0;
-
-  // aloca em memória o array contendo as visitas 
-  s_auxiliar *lista_visitas = calloc(num_vertices, sizeof(s_auxiliar));
-  for (v = agfstnode(g); v; v = agnxtnode(g, v), i++){
-    lista_visitas[i].cor = 0;  // estado
-    lista_visitas[i].componente = 0;
-  }
-
-  return lista_visitas;
-}
-
-
-// Retorna pointer para o vertice dentro da estrutura
+// Retorna pointer para o vertice de dado nome dentro da estrutura
 s_auxiliar *busca_vertice(s_auxiliar *grafo_auxiliar, int n, vertice v){
   for (int i = 0; i < n; i++){
     if (grafo_auxiliar[i].v == v)
@@ -541,38 +525,90 @@ s_auxiliar *busca_vertice(s_auxiliar *grafo_auxiliar, int n, vertice v){
   return NULL;
 }
 
+s_auxiliar *init_lista_aux(grafo g, int n){
+  vertice v;
+  int i = 0;  
+  // aloca em memória o array para salvar dados do vetor
+  s_auxiliar *lista_visitas = calloc( n, sizeof(s_auxiliar));
+  // errro ao alocar mem.
+  if (!lista_visitas)
+    return NULL;
 
-grafo decompoe_vertice(grafo g, s_auxiliar *grafo_auxiliar, s_auxiliar *r, int *c){
-  s_auxiliar *vizinho, *u;
-  Agedge_t *e;
+  for (v = agfstnode(g); v; v = agnxtnode(g, v), i++){
+    lista_visitas[i].v = v;
+    // como a gente inicializa com calloc, todo o resto é 0 ou NULL
+  }
 
-  int num_vertices = n_vertices(g);
-  r->cor = 1;
-  u = r;
+  return lista_visitas;
+}
 
-  // Vizinhos de saida
-  for (e = agfstout(g, u->v); e; e = agnxtout(g, e)){
-    vizinho = busca_vertice(grafo_auxiliar, num_vertices, e->node);
-    if (vizinho->cor == 0){
-      *c += 1;
-      decompoe_vertice(g, grafo_auxiliar, vizinho, c);
+void aux_busca(grafo g, s_auxiliar *s_vertice, s_auxiliar *lista_grafo){
+  s_vertice -> pre = ++t;
+  s_vertice -> visitado = 1;
+  vertice vizinho_saida, v = s_vertice -> v;
+  s_auxiliar *s_vizinho;
+  arco a;
+  int n = n_vertices(g);
+
+  // percorre os vizinhos de v
+  for (a = agfstout(g,v); a; a = agnxtout(g,a)) {
+    // obtém vizinho e sua estrutura de dados
+    vizinho_saida = aghead(a);
+    s_vizinho = busca_vertice(lista_grafo, n, vizinho_saida);
+
+    if(s_vizinho -> visitado == 0){
+      s_vizinho -> pai = v;
+      aux_busca(g, s_vizinho, lista_grafo);
+    }   
+  }
+  s_vertice -> visitado = 2;
+  s_vertice -> pos = ++t;
+}
+
+s_auxiliar *busca_profundidade(grafo g){
+  // DFS
+  int n = n_vertices(g);
+  // array para salvar os dados do grafo atual
+  s_auxiliar *array_dfs = init_lista_aux(g, n);
+  t = 0;
+
+  for (int i = 0; i < n; i++) {
+    if(array_dfs[i].visitado == 0){
+      array_dfs[i].pai = NULL;
+      aux_busca(g, &array_dfs[i], array_dfs);
     }
   }
 
-  r->componente = *c;
-  r->cor = 2;
+  return array_dfs;
 }
 
-
-// Percorre com DFS o grafo auxiliar transposto e retorna o reverso da pos ordem
-s_auxiliar *pos_ordem_dfs_reverso(s_auxiliar *grafo_auxiliar_trans){
-  // DFS
-
-  // Reverso
-
-  return NULL;
+int ordena_pos (const void * a, const void * b) {
+  const s_auxiliar *aux_a = (s_auxiliar *)a;
+  const s_auxiliar *aux_b = (s_auxiliar *)b;
+  return ( aux_a->pos - aux_b->pos );
 }
 
+void decompoe_vertice(grafo g, s_auxiliar *s_vertice, s_auxiliar *lista_grafo){
+  s_vertice -> visitado = 1;
+  vertice vizinho_saida, v = s_vertice -> v;
+  s_auxiliar *s_vizinho;
+  arco a;
+  int n = n_vertices(g);
+
+  // percorre os vizinhos de saída de v
+  for (a = agfstout(g,v); a; a = agnxtout(g,a)) {
+    // obtém vizinho e sua estrutura de dados
+    vizinho_saida = aghead(a);
+    s_vizinho = busca_vertice(lista_grafo, n, vizinho_saida);
+
+    if(s_vizinho -> visitado == 0){
+      s_vizinho -> pai = v;
+      decompoe_vertice(g, s_vizinho, lista_grafo);
+    }   
+  }
+  s_vertice -> componente = c;
+  s_vertice -> visitado = 2;
+}
 
 // -----------------------------------------------------------------------------
 grafo decompoe(grafo g){
@@ -580,35 +616,45 @@ grafo decompoe(grafo g){
   if (!agisdirected(g))
     return g;
 
-  int num_vertices = n_vertices(g);
-
-
-  s_auxiliar *grafo_auxiliar = init_s_aux_componentes(g);
-
-  // REVERSO DA POS ORDEM DE UMA DFS EM G^T
-  // acrescenta à lista de subgrafos de g cada um de seus componentes fortes
-  // vide agsubg(), agfstsubg(), agnxtsubg()
+  int n = n_vertices(g);
+  // Obtém grafo transposto
   grafo g_trans = transposto(g);
+  // faz sua busca em profundiddade e 
+  s_auxiliar *pos_ordem_g_trans = busca_profundidade(g_trans);
+  if (!pos_ordem_g_trans){
+    fprintf(stderr, "%s", "Erro ao alocar memória.\n");
+    return g;
+  }
+  // ordena por pós-ordem
+  qsort(pos_ordem_g_trans, n, sizeof(s_auxiliar), ordena_pos);
 
-  // estrutura auxiliar de grafo que contem estado e componente
-  // basicamente, uma lista de vertices e seus atributos
-  s_auxiliar *grafo_auxiliar_trans = init_s_aux_componentes(g_trans);
-  // reverso da pos ordem resultante de uma busca em profundidade no grafo transposto
-  s_auxiliar *pos_ordem_reverso = pos_ordem_dfs_reverso(grafo_auxiliar_trans);
-
-
-  // Inicializa c
-  int c = 0;  // componentes
-
-  s_auxiliar v;
-  for (int i = 0; i < num_vertices; i++){
-    v = pos_ordem_reverso[i];
-    if (v.cor == 0){
+  s_auxiliar *array_g = init_lista_aux(g, n);
+  if (!array_g){
+    fprintf(stderr, "%s", "Erro ao alocar memória.\n");
+    return g;
+  }
+  // agora cria o contrário do pos ordem de G^t com os vértices de G
+  for(int i = 0; i < n; i++){
+    // busca o equivalente ao vértice e seu pai de G^t em G 
+    array_g[i].v   = agnode(g, agnameof(pos_ordem_g_trans[n - 1 - i].v), FALSE);
+    if (pos_ordem_g_trans[n - 1 - i].pai)
+      array_g[i].pai = agnode(g, agnameof(pos_ordem_g_trans[n - 1 - i].pai), FALSE);
+    array_g[i].pos = pos_ordem_g_trans[n - 1 - i].pos;
+    array_g[i].pre = pos_ordem_g_trans[n - 1 - i].pre;
+  }
+  // Determina os componentes de G: 
+  c = 0; // zera o número de componentes
+  for(int i = 0; i < n; i++){
+    if(array_g[i].visitado == 0){
       c++;
-      decompoe_vertice(g, grafo_auxiliar, &v, &c);
+      decompoe_vertice(g, &array_g[i], array_g);
     }
   }
+  print_auxiliar(array_g, n);
 
-  agclose(g_trans); // não precisamos mais do transposto
+  // libera espaços de memória utilizados
+  destroi_grafo(g_trans); 
+  free(pos_ordem_g_trans);
+  free(array_g);
   return g;
 }
