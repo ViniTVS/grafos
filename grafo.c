@@ -3,14 +3,15 @@
 #include "grafo.h"
 
 // Struct auxiliar para verificar se o grafo é conexo/bipartido
-typedef struct {
+typedef struct s_auxiliar {
 	int visitado;   // 0 = não visitado, 1 = visitando vizinhos, 2 = visitei todos os vizinhos
 	int cor;        // 0 = sem cor, 1 = roxo, 2 = azul
-	vertice v; 
-	vertice pai;
 	int pre;
 	int pos;
 	int componente;
+	int aux;
+	vertice v; 
+	vertice pai;
 } s_auxiliar;
 
 typedef Agedge_t *arco;
@@ -31,9 +32,11 @@ s_auxiliar *busca_vertice(s_auxiliar *grafo_auxiliar, int n, vertice v);
 s_auxiliar *init_lista_aux(grafo g, int n);
 void aux_busca(grafo g, s_auxiliar *s_vertice, s_auxiliar *lista_grafo);
 s_auxiliar *busca_profundidade(grafo g);
-int ordena_pos (const void * a, const void * b);
+int ordena_pos ( void * a, void * b);
 void decompoe_vertice(grafo g, s_auxiliar *s_vertice, s_auxiliar *lista_grafo);
-
+int **multiplica_matriz(int **matriz, int **aux_matriz, int tamanho);
+int soma_diagonal_principal(int **matriz, int tamanho);
+void print_matriz(int **matriz, int tamanho);
 
 // obtém o vértice vizinho de u no grafo g a partir do vértice v
 // Ex:
@@ -249,7 +252,7 @@ int conexo(grafo g) {
 	int num_vertices = n_vertices(g);
 	int i = 0;
 	// aloca em memória o array contendo as visitas 
-	s_auxiliar *lista_visitas = calloc( num_vertices, sizeof(s_auxiliar));
+	s_auxiliar *lista_visitas = calloc( (unsigned long)num_vertices, sizeof(s_auxiliar));
 	for (v = agfstnode(g); v; v = agnxtnode(g, v), i++){
 	lista_visitas[i].visitado = 0;
 	lista_visitas[i].v = v;
@@ -309,7 +312,7 @@ int bipartido(grafo g) {
 	// 0 = não pintado 
 	// 1 = pintado de roxo
 	// 2 = pintado de azul
-	s_auxiliar *lista_visitas = calloc( num_vertices, sizeof(s_auxiliar));
+	s_auxiliar *lista_visitas = calloc( (unsigned long)num_vertices, sizeof(s_auxiliar));
 	for (v = agfstnode(g); v; v = agnxtnode(g, v), i++){
 	lista_visitas[i].visitado = 0;
 	lista_visitas[i].v = v;
@@ -373,9 +376,9 @@ int bipartido(grafo g) {
 
 int **multiplica_matriz(int **matriz, int **aux_matriz, int tamanho){
 	int aux;
-	int **resultado = malloc(tamanho * sizeof(int*));
+	int **resultado = calloc((unsigned long)tamanho, sizeof(int*));
 	for (int i = 0; i < tamanho; i++){
-	resultado[i] = calloc(tamanho, sizeof(int));
+	resultado[i] = calloc((unsigned long)tamanho, sizeof(int));
 	}
 
 	for (int i = 0; i < tamanho; i++){
@@ -432,9 +435,9 @@ int **matriz_adjacencia(grafo g) {
 	int vertices = n_vertices(g);
 
 	// Aloca memoria para a matriz
-	int **matriz = malloc(vertices * sizeof(int*));
+	int **matriz = calloc((unsigned long)vertices, sizeof(int*));
 	for (int i=0; i<vertices; i++){
-	matriz[i] = calloc(vertices, sizeof(int));
+	matriz[i] = calloc((unsigned long)vertices, sizeof(int));
 	}
 
 	vertice v1, v2;
@@ -459,7 +462,8 @@ int **matriz_adjacencia(grafo g) {
 // -----------------------------------------------------------------------------
 grafo complemento(grafo g) {
 	// Novo grafo com mesmo tipo de g
-	grafo g_barra = agopen("g_barra", g->desc, NULL); // complemento
+	char nome[7] = "g_barra";
+	grafo g_barra = agopen(nome, g->desc, NULL); // complemento
 
 	vertice v1, v2, v1_barra, v2_barra;;
 	int i, j;
@@ -501,7 +505,8 @@ grafo complemento(grafo g) {
 // -----------------------------------------------------------------------------
 // cria o grafo transposto como um subgrafo de g
 grafo transposto(grafo g){
-	grafo g_trans = agopen("G transposto", Agdirected, NULL);
+	char nome[12] = "G transposto";
+	grafo g_trans = agopen(nome, Agdirected, NULL);
 	if (!g_trans)
 	return NULL;
 	
@@ -536,7 +541,7 @@ s_auxiliar *init_lista_aux(grafo g, int n){
 	vertice v;
 	int i = 0;  
 	// aloca em memória o array para salvar dados do vetor
-	s_auxiliar *lista_visitas = calloc( n, sizeof(s_auxiliar));
+	s_auxiliar *lista_visitas = calloc( (unsigned long)n, sizeof(s_auxiliar));
 	// errro ao alocar mem.
 	if (!lista_visitas)
 	return NULL;
@@ -594,9 +599,9 @@ s_auxiliar *busca_profundidade(grafo g){
 }
 
 // ordena a lista auxiliar de vértices por seus valores de pós-ordem
-int ordena_pos (const void * a, const void * b) {
-	const s_auxiliar *aux_a = (s_auxiliar *)a;
-	const s_auxiliar *aux_b = (s_auxiliar *)b;
+int ordena_pos (void * a, void * b) {
+	s_auxiliar *aux_a = (s_auxiliar *)a;
+	s_auxiliar *aux_b = (s_auxiliar *)b;
 	return ( aux_a->pos - aux_b->pos );
 }
 
@@ -639,7 +644,7 @@ grafo decompoe(grafo g){
 	return g;
 	}
 	// ordena por pós-ordem
-	qsort(pos_ordem_g_trans, n, sizeof(s_auxiliar), ordena_pos);
+	qsort(pos_ordem_g_trans, (unsigned long)n, sizeof(s_auxiliar), (void *)ordena_pos);
 
 	s_auxiliar *array_g = init_lista_aux(g, n);
 	if (!array_g){
