@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 int main(void){
-  vertice v, vizinho;
+  // vertice v, vizinho;
   grafo g = le_grafo();
   printf("Grafo G:\n");
   escreve_grafo(g);
